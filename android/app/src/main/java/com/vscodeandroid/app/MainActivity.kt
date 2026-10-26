@@ -11,7 +11,7 @@ class MainActivity : Activity() {
     private lateinit var web: WebView
     private val PICK = 1001
 
-    @SuppressLint(["SetJavaScriptEnabled", "AddJavascriptInterface"])
+    @SuppressLint("SetJavaScriptEnabled", "AddJavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         web = WebView(this)
