@@ -6,13 +6,12 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.webkit.*
-import androidx.appcompat.app.AppCompatActivity
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : Activity() {
     private lateinit var web: WebView
     private val PICK = 1001
 
-    @SuppressLint("SetJavaScriptEnabled")
+    @SuppressLint(["SetJavaScriptEnabled", "AddJavascriptInterface"])
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         web = WebView(this)
@@ -20,8 +19,11 @@ class MainActivity : AppCompatActivity() {
         web.settings.javaScriptEnabled = true
         web.settings.domStorageEnabled = true
         web.settings.allowFileAccess = true
+        web.settings.allowContentAccess = true
         web.settings.loadWithOverviewMode = true
         web.settings.useWideViewPort = true
+        web.settings.javaScriptCanOpenWindowsAutomatically = true
+        web.settings.mediaPlaybackRequiresUserGesture = false
         web.webViewClient = WebViewClient()
         web.webChromeClient = WebChromeClient()
         web.addJavascriptInterface(Bridge(), "AndroidBridge")
