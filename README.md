@@ -1,6 +1,17 @@
-# VS Code cho Android
+# VS Code cho Android (full-stack)
 
-App editor giống VS Code chạy trên Android, offline được.
+App Android chạy VS Code thật qua code-server trên VPS: terminal thật, Node/Python, extensions, Git.
+Không có server thì vẫn dùng được chế độ offline (Monaco editor).
+
+## Chế độ full-stack (khuyên dùng)
+
+1. SSH vào VPS, chạy code-server:
+```bash
+curl -fsSL https://code-server.dev/install.sh | sh
+code-server --host 0.0.0.0 --port 8080
+```
+2. Mở app > nhập `Server URL` + `Password` > Kết nối.
+3. Dùng VS Code đầy đủ: terminal, chạy backend, cài extension.
 
 ## Cách chạy nhanh (không cần Android Studio)
 
