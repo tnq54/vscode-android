@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VS Code - Android</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e1e1e">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#1e1e1e;color:#cccccc;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+#titlebar{height:35px;background:#3c3c3c;display:flex;align-items:center;padding:0 10px;font-size:13px;gap:8px;flex-shrink:0}
+#titlebar .dot{width:12px;height:12px;border-radius:50%}
+#menubar{height:35px;background:#2d2d2d;display:flex;align-items:center;padding:0 10px;gap:12px;font-size:13px;flex-shrink:0;overflow-x:auto}
+#menubar span{cursor:pointer;white-space:nowrap;padding:4px 6px;border-radius:4px}
+#menubar span:hover{background:#3e3e3e}
+#main{flex:1;display:flex;min-height:0}
+#activity{width:48px;background:#333333;display:flex;flex-direction:column;align-items:center;padding-top:8px;gap:12px;flex-shrink:0}
+#activity button{background:none;border:none;color:#858585;font-size:20px;cursor:pointer;padding:6px;border-left:2px solid transparent;width:100%}
+#activity button.active{color:#fff;border-left-color:#007acc}
+#sidebar{width:260px;background:#252526;display:flex;flex-direction:column;flex-shrink:0;max-width:70vw}
+#sidebar-header{padding:10px;font-size:11px;text-transform:uppercase;color:#bbbbbb;display:flex;justify-content:space-between;align-items:center}
+#filetree{flex:1;overflow-y:auto;padding:4px 0}
+.file-item{padding:5px 12px 5px 24px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.file-item:hover{background:#2a2d2e}
+.file-item.active{background:#37373d;color:#fff}
+.file-item .del{margin-left:auto;color:#f48771;display:none}
+.file-item:hover .del{display:inline}
+#editor-area{flex:1;display:flex;flex-direction:column;min-width:0;background:#1e1e1e}
+#tabs{display:flex;background:#252526;overflow-x:auto;flex-shrink:0;min-height:35px}
+.tab{padding:8px 12px;font-size:13px;background:#2d2d2d;border-right:1px solid #1e1e1e;cursor:pointer;display:flex;gap:8px;align-items:center;white-space:nowrap}
+.tab.active{background:#1e1e1e;color:#fff;border-top:1px solid #007acc}
+.tab .close{color:#888}.tab .close:hover{color:#fff}
+#editor{flex:1;min-height:0}
+#panel{height:160px;background:#1e1e1e;border-top:1px solid #3e3e3e;display:flex;flex-direction:column;flex-shrink:0}
+#panel-tabs{display:flex;gap:12px;padding:6px 12px;font-size:12px;text-transform:uppercase}
+#panel-tabs span{cursor:pointer;padding:2px 4px}
+#panel-tabs span.active{color:#fff;border-bottom:1px solid #007acc}
+#terminal{flex:1;background:#0c0c0c;color:#00ff00;font-family:monospace;font-size:13px;padding:8px;overflow-y:auto}
+#terminal input{background:none;border:none;color:#fff;font-family:monospace;font-size:13px;outline:none;width:80%}
+#statusbar{height:22px;background:#007acc;color:#fff;font-size:12px;display:flex;align-items:center;padding:0 10px;gap:12px;flex-shrink:0}
+#toolbar{padding:6px;background:#252526;display:flex;gap:6px;flex-shrink:0}
+button.action{background:#0e639c;color:#fff;border:none;padding:6px 12px;font-size:13px;border-radius:3px;cursor:pointer}
+button.action:hover{background:#1177bb}
+button.ghost{background:#3e3e3e;color:#fff;border:none;padding:6px 10px;font-size:13px;border-radius:3px;cursor:pointer}
+#searchbox{padding:8px;display:none}
+#searchbox input{width:100%;background:#3c3c3c;border:1px solid #007acc;color:#fff;padding:6px;font-size:13px;outline:none}
+@media(max-width:700px){#sidebar{position:absolute;z-index:10;height:calc(100% - 92px);left:48px;box-shadow:2px 0 8px #000}#sidebar.hidden{display:none}}
+</style>
+</head>
+<body>
+<div id="titlebar"><span class="dot" style="background:#ff5f56"></span><span class="dot" style="background:#ffbd2e"></span><span class="dot" style="background:#27c93f"></span><span style="margin-left:8px">VS Code - Android</span></div>
+<div id="menubar"><span onclick="newFile()">📄 New File</span><span onclick="newFolder()">📁 New Folder</span><span onclick="openRealFile()">📂 Open File</span><span onclick="runPreview()">▶ Run</span><span onclick="toggleSidebar()">☰ Explorer</span></div>
+<div id="main">
+<div id="activity">
+<button class="active" onclick="showPane('explorer')" title="Explorer">📁</button>
+<button onclick="showPane('search')" title="Search">🔍</button>
+<button onclick="runPreview()" title="Run">▶</button>
+<button onclick="openSettings()" title="Settings">⚙</button>
+</div>
+<div id="sidebar">
+<div id="sidebar-header"><span>EXPLORER</span><span><button class="ghost" onclick="newFile()">+</button> <button class="ghost" onclick="saveAll()">💾</button></span></div>
+<div id="searchbox"><input id="searchinput" placeholder="Search in files..." oninput="searchFiles(this.value)"><div id="searchresults" style="font-size:13px;padding:6px"></div></div>
+<div id="filetree"></div>
+</div>
+<div id="editor-area">
+<div id="tabs"></div>
+<div id="editor"></div>
+<div id="panel">
+<div id="panel-tabs"><span class="active">TERMINAL</span><span onclick="runPreview()">OUTPUT</span><span onclick="clearTerminal()">CLEAR</span></div>
+<div id="terminal"><div id="termout">vscode-android v1.0 — gõ <b>help</b> để xem lệnh<br></div><div style="display:flex">➜ <input id="termin" onkeydown="if(event.key==='Enter')execTerm()"></div></div>
+</div>
+</div>
+</div>
+<div id="toolbar"><button class="action" onclick="saveCurrent()">Save (Ctrl+S)</button><button class="ghost" onclick="runPreview()">Preview HTML</button><button class="ghost" onclick="exportZip()">Export</button><span id="langlabel" style="margin-left:auto;font-size:12px;padding:6px"></span></div>
+<div id="statusbar"><span>⎇ main</span><span id="statusfile">No file</span><span style="margin-left:auto">UTF-8 • LF</span></div>
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+<script>
+let files = JSON.parse(localStorage.getItem('vscode-android-files')||'{"index.html":"<!DOCTYPE html>\\n<html>\\n<head><meta charset=\\"UTF-8\\"><title>Hello</title></head>\\n<body>\\n<h1>Hello Android VS Code 👋</h1>\\n<script>console.log(\\"hi\\")<\\/script>\\n</body>\\n</html>","app.js":"// VS Code trên Android\\nfunction hello(name){\\n  return \\"Hello \\"+name;\\n}\\nconsole.log(hello(\\"Android\\"));","style.css":"body{font-family:sans-serif;background:#1e1e1e;color:#fff}","README.md":"# My Project\\nEdit trên điện thoại luôn!"}');
+let openTabs=[], activeFile=null, editor=null, models={};
+function persist(){localStorage.setItem('vscode-android-files',JSON.stringify(files)); if(window.AndroidBridge) AndroidBridge.saveFiles(JSON.stringify(files));}
+function langOf(f){if(f.endsWith('.html'))return 'html';if(f.endsWith('.js'))return 'javascript';if(f.endsWith('.css'))return 'css';if(f.endsWith('.json'))return 'json';if(f.endsWith('.py'))return 'python';if(f.endsWith('.java'))return 'java';if(f.endsWith('.kt'))return 'kotlin';if(f.endsWith('.md'))return 'markdown';if(f.endsWith('.ts'))return 'typescript';return 'plaintext';}
+require.config({paths:{vs:'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs'}});
+require(['vs/editor/editor.main'],function(){
+editor=monaco.editor.create(document.getElementById('editor'),{theme:'vs-dark',automaticLayout:true,fontSize:14,minimap:{enabled:false},wordWrap:'on',padding:{top:8}});
+editor.addCommand(monaco.KeyMod.CtrlCmd|monaco.KeyCode.KeyS,saveCurrent);
+renderTree(); openFile(Object.keys(files)[0]);
+if(window.AndroidBridge){try{let d=AndroidBridge.loadFiles(); if(d) files=JSON.parse(d);}catch(e){}}
+});
+function renderTree(){
+let el=document.getElementById('filetree'); el.innerHTML='';
+Object.keys(files).sort().forEach(f=>{
+let d=document.createElement('div'); d.className='file-item'+(f===activeFile?' active':'');
+d.innerHTML='<span>📄 '+f+'</span><span class="del" onclick="delFile(event,\\''+f+'\\')">✕</span>';
+d.onclick=()=>openFile(f); el.appendChild(d);
+});}
+function openFile(f){
+if(!openTabs.includes(f)) openTabs.push(f);
+activeFile=f;
+if(editor){if(!models[f]) models[f]=monaco.editor.createModel(files[f]||'',langOf(f)); editor.setModel(models[f]);}
+document.getElementById('statusfile').textContent=f;
+document.getElementById('langlabel').textContent=langOf(f);
+renderTabs();}
+function renderTabs(){
+let t=document.getElementById('tabs'); t.innerHTML='';
+openTabs.forEach(f=>{let d=document.createElement('div');d.className='tab'+(f===activeFile?' active':'');d.innerHTML='<span>'+f+'</span><span class="close">✕</span>';d.onclick=(e)=>{if(e.target.className==='close'){openTabs=openTabs.filter(x=>x!==f); if(activeFile===f){activeFile=openTabs[0]||null; if(activeFile&&editor)editor.setModel(models[activeFile]);} renderTabs();}else openFile(f);};t.appendChild(d);});}
+function syncModel(){if(activeFile&&models[activeFile]) files[activeFile]=models[activeFile].getValue(); persist();}
+setInterval(syncModel,2000);
+function saveCurrent(){syncModel(); log('💾 Saved '+activeFile);} 
+function saveAll(){syncModel(); log('💾 Saved all files');}
+function newFile(){let n=prompt('Tên file:','untitled.js'); if(!n)return; if(files[n])return alert('Đã tồn tại'); files[n]=''; persist(); renderTree(); openFile(n);}
+function newFolder(){alert('Bản mobile: dùng tiền tố folder/ khi đặt tên file, vd: src/app.js'); newFile();}
+function delFile(e,f){e.stopPropagation(); if(!confirm('Xóa '+f+'?'))return; delete files[f]; delete models[f]; openTabs=openTabs.filter(x=>x!==f); persist(); renderTree(); renderTabs(); if(activeFile===f){activeFile=openTabs[0]||null; if(activeFile)openFile(activeFile);}}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('hidden');}
+function showPane(p){document.getElementById('sidebar').classList.remove('hidden'); document.getElementById('searchbox').style.display=p==='search'?'block':'none'; document.querySelectorAll('#activity button').forEach(b=>b.classList.remove('active'));}
+function searchFiles(q){let r=document.getElementById('searchresults'); if(!q){r.innerHTML='';return;} r.innerHTML=Object.keys(files).filter(f=>files[f].includes(q)).map(f=>'<div onclick="openFile(\\''+f+'\\')">📄 '+f+'</div>').join('')||'No results';}
+function openRealFile(){
+if(window.AndroidBridge){AndroidBridge.openFile();}
+else{let i=document.createElement('input');i.type='file';i.onchange=e=>{let f=e.target.files[0];let rd=new FileReader();rd.onload=()=>{files[f.name]=rd.result;persist();renderTree();openFile(f.name);};rd.readAsText(f);};i.click();}}
+function onAndroidFile(name,content){files[name]=content;persist();renderTree();openFile(name);}
+function runPreview(){
+syncModel();
+if(!activeFile)return;
+if(activeFile.endsWith('.html')){let w=window.open('','_blank');w.document.write(files[activeFile]);}
+else if(activeFile.endsWith('.js')){try{let out=eval(files[activeFile]);log('▶ Output: '+out);}catch(e){log('❌ '+e.message);}}
+else log('▶ Đã lưu '+activeFile+' — mở file .html/.js để preview');}
+function log(m){document.getElementById('termout').innerHTML+='<div>'+m+'</div>';document.getElementById('terminal').scrollTop=9999;}
+function clearTerminal(){document.getElementById('termout').innerHTML='';}
+function execTerm(){let i=document.getElementById('termin');let c=i.value.trim();i.value='';log('➜ '+c);
+if(c==='help')log('help, ls, cat &lt;file&gt;, clear, run');
+else if(c==='ls')log(Object.keys(files).join('<br>'));
+else if(c.startsWith('cat ')){let f=c.slice(4);log('<pre>'+(files[f]||'not found').slice(0,500)+'</pre>');}
+else if(c==='clear')clearTerminal();
+else if(c==='run')runPreview();
+else if(c.startsWith('echo '))log(c.slice(5));
+else log('unknown: '+c);}
+function openSettings(){alert('VS Code Android v1.0\\n- Theme: Dark+\\n- Font: 14\\n- AutoSave: 2s');}
+function exportZip(){let blob=new Blob([JSON.stringify(files,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='project.json';a.click();log('📦 Exported project.json');}
+</script>
+</body>
+</html>
